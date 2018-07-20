@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_margin="@dimen/activity_vertical_margin"
+    android:layout_height="match_parent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/ed_surname"
+                style="@style/editText_style"
+                android:hint="Surname" />
+
+            <EditText
+                android:id="@+id/ed_firstname"
+                style="@style/editText_style"
+                android:hint="Firstname" />
+            <EditText
+                android:id="@+id/edemail"
+                style="@style/editText_style"
+                android:hint="email address" />
+            <EditText
+                android:id="@+id/ed_mobile"
+                style="@style/editText_style"
+                android:inputType="number"
+                android:hint="Mobile Number" />
+            <EditText
+                android:id="@+id/ed_password"
+                style="@style/editText_style"
+                android:inputType="textPassword"
+                android:hint="password" />
+            <EditText
+                android:id="@+id/ed_password2"
+                style="@style/editText_style"
+                android:inputType="textPassword"
+                android:hint="Confirm password" />
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_drawable"
+                android:textColor="@color/white"
+                android:layout_marginBottom="10dp"
+                android:id="@+id/btnsignUp"
+                android:text="Sign Up" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorAccent"
+                    android:textStyle="bold|italic"
+                    android:text="Already have an account"/>
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/button_drawable"
+                    android:textColor="@color/white"
+                    android:layout_weight="1"
+                    android:id="@+id/btnlogin"
+                    android:text="Login" />
+            </LinearLayout>
+
+
+
+        </LinearLayout>
+    </ScrollView>
+
+
+</LinearLayout>

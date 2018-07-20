@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/edEvent_name"
+            style="@style/editText_style"
+            android:hint="Event  name" />
+
+        <EditText
+            android:id="@+id/edEvent_desc"
+            style="@style/editText_style"
+            android:hint="Event Description" />
+
+        <EditText
+            style="@style/editText_style"
+            android:id="@+id/edTarget"
+            android:hint="Target group" />
+
+        <EditText
+            android:id="@+id/edCost"
+            style="@style/editText_style"
+            android:hint="cost"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/edEvent_date"
+            style="@style/editText_style"
+            android:textIsSelectable="true"
+            android:padding="10dp"
+            android:clickable="true"
+            android:hint="event Date" />
+
+        <EditText
+            android:id="@+id/edEvent_time"
+            android:textIsSelectable="true"
+            style="@style/editText_style"
+            android:padding="10dp"
+            android:clickable="true"
+            android:hint="Event Time" />
+
+
+        <EditText
+            android:id="@+id/edEventLocation"
+            style="@style/editText_style"
+            android:textIsSelectable="true"
+            android:clickable="true"
+            android:padding="10dp"
+            android:hint="Event Location" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnSave"
+            android:background="@drawable/button_drawable"
+            android:textColor="@color/white"
+            android:text="Submit  Event" />
+
+    </LinearLayout>
+
+
+</ScrollView>
