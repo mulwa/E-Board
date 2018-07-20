@@ -1,5 +1,6 @@
 package com.example.gen.e_board;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,6 +24,7 @@ public class login extends Fragment implements View.OnClickListener {
     public Button m_btn_login, m_btn_account;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
+    private ProgressDialog mProgressDialog;
 
     public login() {
     }
@@ -30,10 +32,10 @@ public class login extends Fragment implements View.OnClickListener {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.login,container,false);
+        View view = inflater.inflate(R.layout.login, container, false);
         m_email = view.findViewById(R.id.ed_email);
         m_password = view.findViewById(R.id.ed_password);
-        m_btn_account  = view.findViewById(R.id.btncreatAccount);
+        m_btn_account = view.findViewById(R.id.btncreatAccount);
         m_btn_login = view.findViewById(R.id.btnlogin);
 
         m_btn_account.setOnClickListener(this);
@@ -47,22 +49,22 @@ public class login extends Fragment implements View.OnClickListener {
     @Override
     public void onStart() {
         super.onStart();
-        if(mAuth.getCurrentUser() != null){
+        if (mAuth.getCurrentUser() != null) {
             currentUser = mAuth.getCurrentUser();
             showToast("User arlready signed");
         }
     }
 
-    public boolean validateInput(){
-        if(TextUtils.isEmpty(m_email.getText().toString().trim())){
+    public boolean validateInput() {
+        if (TextUtils.isEmpty(m_email.getText().toString().trim())) {
             showToast("please  provide email address");
             return false;
         }
-        if(!android.util.Patterns.EMAIL_ADDRESS.matcher(m_email.getText().toString()).matches()){
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(m_email.getText().toString()).matches()) {
             showToast("Please Enter a Valid Email Address");
             return false;
         }
-        if(TextUtils.isEmpty(m_password.getText().toString().trim())){
+        if (TextUtils.isEmpty(m_password.getText().toString().trim())) {
             showToast("Please enter your password");
             return false;
         }
@@ -73,33 +75,55 @@ public class login extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if(id == R.id.btnlogin){
-            if(validateInput()){
+        if (id == R.id.btnlogin) {
+            if (validateInput()) {
                 signIn();
             }
 
         }
-        if(id == R.id.btncreatAccount){
+        if (id == R.id.btncreatAccount) {
             showToast("Redirecting to create account");
         }
 
     }
-    public void showToast(String msg){
-        Toast.makeText(getContext(),msg,Toast.LENGTH_SHORT).show();
+
+    public void showToast(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }
-    public void signIn(){
-        mAuth.signInWithEmailAndPassword(m_email.getText().toString().trim(),m_password.getText().toString().trim())
+
+    public void signIn() {
+        showDialog();
+        mAuth.signInWithEmailAndPassword(m_email.getText().toString().trim(), m_password.getText().toString().trim())
                 .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
+                        hideDialog();
+                        if (task.isSuccessful()) {
                             currentUser = mAuth.getCurrentUser();
                             showToast("Sign in successful");
-                        }else{
+                        } else {
                             showToast("Authentication failed Please use correct email and password:" + task.getException());
                         }
 
                     }
                 });
+    }
+
+    private void showDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog.setMessage("Authenticating user Please wait");
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+
+    }
+
+    private void hideDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+
     }
 }
