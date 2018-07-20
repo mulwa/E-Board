@@ -85,6 +85,10 @@ public class signUp extends Fragment implements View.OnClickListener{
             showToast("please provide a valid email address");
             return false;
         }
+        if(!android.util.Patterns.EMAIL_ADDRESS.matcher(m_email.getText().toString()).matches()){
+            showToast("Please Enter a Valid Email Address");
+            return false;
+        }
         if(TextUtils.isEmpty(m_firstname.getText().toString().trim())){
             showToast("Please provide firstname");
             return false;

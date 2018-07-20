@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,6 +134,30 @@ public class AddEvent extends Fragment implements View.OnClickListener {
             showToast("saving");
         }
 
+    }
+    private boolean  validateInputs(){
+        if(TextUtils.isEmpty(mEventName.getText().toString().trim())){
+            showToast("Please provide the name of  the event");
+            return false;
+        }
+        if(TextUtils.isEmpty(mEventDesc.getText().toString().trim())){
+            showToast("Please provide the name of  the event");
+            return false;
+        }
+        if(TextUtils.isEmpty(mTarget.getText().toString().trim())){
+            showToast("Please provide the name of  the event");
+            return false;
+        }
+        if(TextUtils.isEmpty(mTime.getText().toString().trim())){
+            showToast("Please provide the name of  the event");
+            return false;
+        }
+        if(TextUtils.isEmpty(mDate.getText().toString().trim())){
+            showToast("Please provide the name of  the event");
+            return false;
+        }
+
+        return true;
     }
     private void launchTimePicker(){
         int hr = cal.get(Calendar.HOUR_OF_DAY);

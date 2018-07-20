@@ -58,6 +58,10 @@ public class login extends Fragment implements View.OnClickListener {
             showToast("please  provide email address");
             return false;
         }
+        if(!android.util.Patterns.EMAIL_ADDRESS.matcher(m_email.getText().toString()).matches()){
+            showToast("Please Enter a Valid Email Address");
+            return false;
+        }
         if(TextUtils.isEmpty(m_password.getText().toString().trim())){
             showToast("Please enter your password");
             return false;
