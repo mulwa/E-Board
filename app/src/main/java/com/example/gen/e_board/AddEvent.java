@@ -25,6 +25,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -44,6 +45,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
     private FirebaseDatabase  database;
     private DatabaseReference  eventsRefs;
     private ProgressDialog mProgressDialog;
+    private LatLng  eventLatLng;
 
 
     public AddEvent() {
@@ -54,8 +56,9 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         if(requestCode == PLACE_PICKER_REQUEST){
             if(resultCode == RESULT_OK){
                 Place place = PlacePicker.getPlace(getContext(),data);
-                showToast("Place picked"+place.getName());
+                showToast("Place Latlng"+place.getLatLng());
                 mLocation.setText(place.getName());
+                eventLatLng = place.getLatLng();
             }
         }
     }
@@ -76,7 +79,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         mSave.setOnClickListener(this);
         mLocation.setOnClickListener(this);
         mDate.setOnClickListener(this);
-        mDate.setOnClickListener(this);
+        mTime.setOnClickListener(this);
 //        set up firebase
         mAuth  = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
@@ -96,7 +99,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         mTimeListener = new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int hours, int min) {
-                String time = hours + "/" + min;
+                String time = hours + ":" + min;
                 mTime.setText(time);
 
             }
@@ -119,6 +122,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         int id = view.getId();
+
         if(id == R.id.edEvent_date){
             hideKeyboard();
             lauchDateicker();
@@ -131,7 +135,9 @@ public class AddEvent extends Fragment implements View.OnClickListener {
             launchPlacePicker();
         }else if (id == R.id.btnSave){
             hideKeyboard();
-            showToast("saving");
+            if(validateInputs()){
+                showToast("saving");
+            }
         }
 
     }
@@ -141,19 +147,23 @@ public class AddEvent extends Fragment implements View.OnClickListener {
             return false;
         }
         if(TextUtils.isEmpty(mEventDesc.getText().toString().trim())){
-            showToast("Please provide the name of  the event");
+            showToast("Please provide Event Description");
             return false;
         }
         if(TextUtils.isEmpty(mTarget.getText().toString().trim())){
-            showToast("Please provide the name of  the event");
+            showToast("Please Target Audience");
             return false;
         }
         if(TextUtils.isEmpty(mTime.getText().toString().trim())){
-            showToast("Please provide the name of  the event");
+            showToast("Please the time of the event");
             return false;
         }
         if(TextUtils.isEmpty(mDate.getText().toString().trim())){
-            showToast("Please provide the name of  the event");
+            showToast("Please provide date of the event");
+            return false;
+        }
+        if(TextUtils.isEmpty(mLocation.getText().toString().trim())){
+            showToast("Please provide location of the event");
             return false;
         }
 
