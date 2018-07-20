@@ -77,10 +77,18 @@ public class signUp extends Fragment implements View.OnClickListener {
         } else {
             showToast("User dont  exist");
         }
-        if (!isNetworkAvailable()){
+        if (!isNetworkAvailable()) {
             showToast("Please turn data on  or connect to WIFI");
         }
 
+    }
+    private void clearUi(){
+        m_email.setText("");
+        m_surname.setText("");
+        m_firstname.setText("");
+        m_mobile.setText("");
+        m_password2.setText("");
+        m_password.setText("");
     }
 
 
@@ -118,7 +126,7 @@ public class signUp extends Fragment implements View.OnClickListener {
             showToast("Password did not match");
             return false;
         }
-        if (!isNetworkAvailable()){
+        if (!isNetworkAvailable()) {
             showToast("Please turn data on  or connect to WIFI");
             return false;
         }
@@ -132,9 +140,10 @@ public class signUp extends Fragment implements View.OnClickListener {
 
         switch (id) {
             case R.id.btnsignUp:
+                showDialog();
                 if (validateinput()) {
                     showToast("ready to");
-                    mAuth.createUserWithEmailAndPassword(email, m_password.getText().toString().trim())
+                    mAuth.createUserWithEmailAndPassword(m_email.getText().toString().trim(), m_password.getText().toString().trim())
                             .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
                                 @Override
                                 public void onComplete(@NonNull Task<AuthResult> task) {
@@ -147,6 +156,8 @@ public class signUp extends Fragment implements View.OnClickListener {
 
                                 }
                             });
+                } else {
+                    hideDialog();
                 }
                 break;
             case R.id.btnlogin:
@@ -160,7 +171,6 @@ public class signUp extends Fragment implements View.OnClickListener {
     }
 
     public void saveUser() {
-        showDialog();
         User customer = new User(surname, firstname, email, mobile);
         customerRef.push().setValue(customer, new DatabaseReference.CompletionListener() {
             @Override
@@ -168,6 +178,7 @@ public class signUp extends Fragment implements View.OnClickListener {
                 hideDialog();
                 if (databaseError == null) {
                     showToast("Successfully Created account");
+                    clearUi();
                 } else {
                     showToast("Please try again later" + databaseError.getMessage());
                 }
@@ -183,12 +194,13 @@ public class signUp extends Fragment implements View.OnClickListener {
         mobile = m_mobile.getText().toString().trim();
     }
 
-        private boolean isNetworkAvailable() {
+    private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
     private void showDialog() {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(getContext());
