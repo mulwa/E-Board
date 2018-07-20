@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -21,12 +22,14 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.example.gen.e_board.Pojo.Event;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -45,7 +48,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
     private FirebaseDatabase  database;
     private DatabaseReference  eventsRefs;
     private ProgressDialog mProgressDialog;
-    private LatLng  eventLatLng;
+    public LatLng  eventLatLng;
 
 
     public AddEvent() {
@@ -128,7 +131,6 @@ public class AddEvent extends Fragment implements View.OnClickListener {
             lauchDateicker();
         }else if (id == R.id.edEvent_time){
             hideKeyboard();
-            showToast("Time picker clicked");
             launchTimePicker();
         }else if (id == R.id.edEventLocation){
             hideKeyboard();
@@ -136,10 +138,43 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         }else if (id == R.id.btnSave){
             hideKeyboard();
             if(validateInputs()){
-                showToast("saving");
+                saveEvent();
             }
         }
 
+    }
+    private void clearForm(){
+        mEventName.setText("");
+        mEventDesc.setText("");
+        mTarget.setText("");
+        mCost.setText("");
+        mTime.setText("");
+        mDate.setText("");
+        mLocation.setText("");
+    }
+    private void saveEvent(){
+        showDialog();
+        String name = mEventName.getText().toString().trim().toLowerCase();
+        String desc = mEventDesc.getText().toString().trim().toLowerCase();
+        String target = mTarget.getText().toString().trim();
+        String cost = mCost.getText().toString();
+        String time = mTime.getText().toString();
+        String date = mDate.getText().toString();
+        String location = mLocation.getText().toString().trim();
+
+        Event event = new Event(name,desc,target,cost,date,time,location,eventLatLng);
+        eventsRefs.push().setValue(event, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                hideDialog();
+                if(databaseError == null){
+                    showToast("Event Successfully Added");
+                    clearForm();
+                }else {
+                    showToast("Error Please Try again later::"+databaseError.getMessage());
+                }
+            }
+        });
     }
     private boolean  validateInputs(){
         if(TextUtils.isEmpty(mEventName.getText().toString().trim())){
