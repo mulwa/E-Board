@@ -1,7 +1,5 @@
 package com.example.gen.e_board.Pojo;
 
-import com.google.android.gms.maps.model.LatLng;
-
 public class Event {
     private String eventName;
     private String eventDesc;
@@ -10,9 +8,14 @@ public class Event {
     private String eventDate;
     private String eventTime;
     private String placeName;
-    private LatLng latLng;
+    private Double Lat;
+    private Double Lng;
 
-    public Event(String eventName, String eventDesc, String targetGroup, String cost, String eventDate, String eventTime, String placeName, LatLng latLng) {
+    public Event() {
+    }
+
+    public Event(String eventName, String eventDesc, String targetGroup, String cost,
+                 String eventDate, String eventTime, String placeName, Double lat, Double lng) {
         this.eventName = eventName;
         this.eventDesc = eventDesc;
         this.targetGroup = targetGroup;
@@ -20,10 +23,8 @@ public class Event {
         this.eventDate = eventDate;
         this.eventTime = eventTime;
         this.placeName = placeName;
-        this.latLng = latLng;
-    }
-
-    public Event() {
+        Lat = lat;
+        Lng = lng;
     }
 
     public String getEventName() {
@@ -82,11 +83,20 @@ public class Event {
         this.placeName = placeName;
     }
 
-    public LatLng getLatLng() {
-        return latLng;
+    public Double getLat() {
+        return Lat;
     }
 
-    public void setLatLng(LatLng latLng) {
-        this.latLng = latLng;
+    public void setLat(Double lat) {
+        Lat = lat;
+    }
+
+    public Double getLng() {
+        return Lng;
+    }
+
+    public void setLng(Double lng) {
+        Lng = lng;
     }
 }
+

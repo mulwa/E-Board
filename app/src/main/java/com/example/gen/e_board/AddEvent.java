@@ -27,7 +27,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -48,7 +47,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
     private FirebaseDatabase  database;
     private DatabaseReference  eventsRefs;
     private ProgressDialog mProgressDialog;
-    public LatLng  eventLatLng;
+    private Double latitude,longtitude;
 
 
     public AddEvent() {
@@ -61,7 +60,8 @@ public class AddEvent extends Fragment implements View.OnClickListener {
                 Place place = PlacePicker.getPlace(getContext(),data);
                 showToast("Place Latlng"+place.getLatLng());
                 mLocation.setText(place.getName());
-                eventLatLng = place.getLatLng();
+                latitude = place.getLatLng().latitude;
+                longtitude = place.getLatLng().longitude;
             }
         }
     }
@@ -89,7 +89,6 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         eventsRefs = database.getReference("Events");
 
         cal =  Calendar.getInstance();
-
         mDataListener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
@@ -162,7 +161,7 @@ public class AddEvent extends Fragment implements View.OnClickListener {
         String date = mDate.getText().toString();
         String location = mLocation.getText().toString().trim();
 
-        Event event = new Event(name,desc,target,cost,date,time,location,eventLatLng);
+        Event event = new Event(name,desc,target,cost,date,time,location,latitude,longtitude);
         eventsRefs.push().setValue(event, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {

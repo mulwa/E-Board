@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_margin="@dimen/activity_vertical_margin"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
+
     <ScrollView
         android:layout_width="match_parent"
+        android:layout_margin="@dimen/activity_vertical_margin"
         android:layout_height="wrap_content">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -21,33 +27,38 @@
                 android:id="@+id/ed_firstname"
                 style="@style/editText_style"
                 android:hint="Firstname" />
+
             <EditText
                 android:id="@+id/ed_email"
                 style="@style/editText_style"
                 android:hint="email address" />
+
             <EditText
                 android:id="@+id/ed_mobile"
                 style="@style/editText_style"
-                android:inputType="number"
-                android:hint="Mobile Number" />
+                android:hint="Mobile Number"
+                android:inputType="number" />
+
             <EditText
                 android:id="@+id/ed_password"
                 style="@style/editText_style"
-                android:inputType="textPassword"
-                android:hint="password" />
+                android:hint="password"
+                android:inputType="textPassword" />
+
             <EditText
                 android:id="@+id/ed_password2"
                 style="@style/editText_style"
-                android:inputType="textPassword"
-                android:hint="Confirm password" />
+                android:hint="Confirm password"
+                android:inputType="textPassword" />
+
             <Button
+                android:id="@+id/btnsignUp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/button_drawable"
-                android:textColor="@color/white"
                 android:layout_marginBottom="10dp"
-                android:id="@+id/btnsignUp"
-                android:text="Sign Up" />
+                android:background="@drawable/button_drawable"
+                android:text="Sign Up"
+                android:textColor="@color/white" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -58,19 +69,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:text="Already have an account"
                     android:textColor="@color/colorAccent"
-                    android:textStyle="bold|italic"
-                    android:text="Already have an account"/>
+                    android:textStyle="bold|italic" />
+
                 <Button
+                    android:id="@+id/btnlogin"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/button_drawable"
-                    android:textColor="@color/white"
                     android:layout_weight="1"
-                    android:id="@+id/btnlogin"
-                    android:text="Login" />
+                    android:background="@drawable/button_drawable"
+                    android:text="Login"
+                    android:textColor="@color/white" />
             </LinearLayout>
-
 
 
         </LinearLayout>

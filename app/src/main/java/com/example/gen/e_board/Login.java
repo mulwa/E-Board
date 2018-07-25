@@ -1,14 +1,13 @@
 package com.example.gen.e_board;
 
 import android.app.ProgressDialog;
-import android.os.Bundle;
+import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -19,39 +18,59 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class login extends Fragment implements View.OnClickListener {
+public class Login extends AppCompatActivity implements View.OnClickListener{
     public EditText m_email, m_password;
     public Button m_btn_login, m_btn_account;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private ProgressDialog mProgressDialog;
+    private Toolbar  toolbar;
+    private FirebaseAuth.AuthStateListener authStateListener;
 
-    public login() {
-    }
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.login, container, false);
-        m_email = view.findViewById(R.id.ed_email);
-        m_password = view.findViewById(R.id.ed_password);
-        m_btn_account = view.findViewById(R.id.btncreatAccount);
-        m_btn_login = view.findViewById(R.id.btnlogin);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.login);
+        m_email = findViewById(R.id.ed_email);
+        m_password = findViewById(R.id.ed_password);
+        m_btn_account = findViewById(R.id.btncreatAccount);
+        m_btn_login = findViewById(R.id.btnlogin);
 
         m_btn_account.setOnClickListener(this);
         m_btn_login.setOnClickListener(this);
 
         mAuth = FirebaseAuth.getInstance();
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                currentUser  = firebaseAuth.getCurrentUser();
+                if(currentUser != null){
+                    startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                }
 
-        return view;
+            }
+        };
+
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        if(getSupportActionBar() != null){
+            getSupportActionBar().setTitle("Login");
+        }
+
     }
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
-        if (mAuth.getCurrentUser() != null) {
-            currentUser = mAuth.getCurrentUser();
-            showToast("User arlready signed");
+        mAuth.addAuthStateListener(authStateListener);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(authStateListener !=  null){
+            mAuth.removeAuthStateListener(authStateListener);
         }
     }
 
@@ -71,47 +90,12 @@ public class login extends Fragment implements View.OnClickListener {
 
         return true;
     }
-
-    @Override
-    public void onClick(View view) {
-        int id = view.getId();
-        if (id == R.id.btnlogin) {
-            if (validateInput()) {
-                signIn();
-            }
-
-        }
-        if (id == R.id.btncreatAccount) {
-            showToast("Redirecting to create account");
-        }
-
-    }
-
     public void showToast(String msg) {
-        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
-
-    public void signIn() {
-        showDialog();
-        mAuth.signInWithEmailAndPassword(m_email.getText().toString().trim(), m_password.getText().toString().trim())
-                .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        hideDialog();
-                        if (task.isSuccessful()) {
-                            currentUser = mAuth.getCurrentUser();
-                            showToast("Sign in successful");
-                        } else {
-                            showToast("Authentication failed Please use correct email and password:" + task.getException());
-                        }
-
-                    }
-                });
-    }
-
     private void showDialog() {
         if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog = new ProgressDialog(Login.this);
             mProgressDialog.setMessage("Authenticating user Please wait");
             mProgressDialog.setIndeterminate(true);
         }
@@ -125,5 +109,37 @@ public class login extends Fragment implements View.OnClickListener {
             mProgressDialog.dismiss();
         }
 
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        if (id == R.id.btnlogin) {
+            if (validateInput()) {
+                signIn();
+            }
+
+        }
+        if (id == R.id.btncreatAccount) {
+           startActivity(new Intent(Login.this,SignUp.class));
+        }
+
+    }
+    public void signIn() {
+        showDialog();
+        mAuth.signInWithEmailAndPassword(m_email.getText().toString().trim(), m_password.getText().toString().trim())
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        hideDialog();
+                        if (task.isSuccessful()) {
+                            currentUser = mAuth.getCurrentUser();
+                            startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                        } else {
+                            showToast("Authentication failed Please use correct email and password:" + task.getException());
+                        }
+
+                    }
+                });
     }
 }
