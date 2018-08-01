@@ -103,6 +103,9 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
                     // Add a marker in event places and move the camera
                     LatLng ev = new LatLng(event.getLat(), event.getLng());
 
+//                    adding geofence to the events locations
+                    addGeofence(event.getLat(),event.getLng(),event.getEventName());
+
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.position(ev)
                             .title(event.getEventName())
@@ -272,7 +275,7 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
     private Geofence setGeofence(double lat, double lng, String key) {
         return new Geofence.Builder()
                 .setRequestId(key)
-                .setCircularRegion(lat, lng, 15.0f)
+                .setCircularRegion(lat, lng, 500)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                 .setLoiteringDelay(10000)

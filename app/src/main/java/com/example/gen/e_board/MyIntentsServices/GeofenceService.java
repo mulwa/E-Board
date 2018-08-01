@@ -56,9 +56,11 @@ public class GeofenceService extends IntentService {
 
         String status = null;
         if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER )
-            status = "Entering ";
+            status = "Welcome at ";
         else if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
-            status = "Exiting ";
+            status = "Hope you had a nice time at ";
+        else if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL)
+            status = "Nice to Have You at ";
         return status + TextUtils.join( ", ", triggeringGeofencesList);
     }
     private void notifyLocationAlert(String locTransitionType, String locationDetails) {
@@ -94,11 +96,11 @@ public class GeofenceService extends IntentService {
     private String getTransitionString(int transitionType) {
         switch (transitionType) {
             case Geofence.GEOFENCE_TRANSITION_ENTER:
-                return "location entered";
+                return "Welcome";
             case Geofence.GEOFENCE_TRANSITION_EXIT:
-                return "location exited";
+                return "We are sad to see leave us";
             case Geofence.GEOFENCE_TRANSITION_DWELL:
-                return "dwell at location";
+                return "Have a nice stay here";
             default:
                 return "location transition";
         }
