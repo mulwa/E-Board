@@ -2,6 +2,7 @@ package com.example.gen.e_board;
 
 import android.Manifest;
 import android.app.Fragment;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,9 +18,13 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.gen.e_board.Adapter.customInforAdapter;
+import com.example.gen.e_board.MyIntentsServices.GeofenceService;
 import com.example.gen.e_board.Pojo.Event;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -32,6 +37,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -52,6 +59,10 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
     private DatabaseReference eventsRef;
     private ProgressDialog mProgressDialog;
     private FirebaseAuth.AuthStateListener mAuthlistener;
+    private Marker currentLocationMarker;
+    private PendingIntent geoFencePendingIntent;
+    private final int GEOFENCE_REQ_CODE = 0;
+    private GeofencingClient geofencingClient;
 
 
     public EventFragment() {
@@ -65,6 +76,8 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         eventsRef = database.getReference("Events");
+
+        geofencingClient = LocationServices.getGeofencingClient(getContext());
         fetchEvents();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.event_map);
@@ -72,6 +85,9 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
 
 
         buildGoogleClient();
+
+        addGeofence(-1.1008112,37.01206639999998,"Liberty");
+        addGeofence(-1.0969095,37.0153225,"Jkuat Library");
         return view;
     }
 
@@ -91,7 +107,7 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
                     markerOptions.position(ev)
                             .title(event.getEventName())
                             .snippet(event.getEventDesc())
-                            .icon(BitmapDescriptorFactory.defaultMarker( BitmapDescriptorFactory.HUE_BLUE));
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
 
                     Event event1 = new Event();
                     event1.setEventDate(event.getEventDate());
@@ -110,7 +126,6 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
 
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(ev));
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-
 
 
                 }
@@ -203,13 +218,19 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
             currentLat = location.getLatitude();
             currentLong = location.getLongitude();
             LatLng positionLatLng = new LatLng(currentLat, currentLong);
-            mMap.addMarker(new MarkerOptions().position(positionLatLng)
-                    .title("My Current Location")
-            );
+
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(positionLatLng)
+                    .title("Your current  location")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+
+            if (currentLocationMarker != null)
+                currentLocationMarker.remove();
+            currentLocationMarker = mMap.addMarker(markerOptions);
 
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(positionLatLng).zoom(15f).tilt(70).build();
+                    .target(positionLatLng).zoom(19f).tilt(70).build();
 
             if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -246,5 +267,63 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
             mProgressDialog.dismiss();
         }
 
+    }
+
+    private Geofence setGeofence(double lat, double lng, String key) {
+        return new Geofence.Builder()
+                .setRequestId(key)
+                .setCircularRegion(lat, lng, 15.0f)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setLoiteringDelay(10000)
+                .build();
+    }
+
+    private GeofencingRequest setGeofencingRequest(Geofence geofence) {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.addGeofence(geofence);
+        return builder.build();
+    }
+
+    private PendingIntent createPendingIntent() {
+        if (geoFencePendingIntent != null)
+            return geoFencePendingIntent;
+        Intent intent = new Intent(getContext(), GeofenceService.class);
+        return PendingIntent.getService(getContext(), GEOFENCE_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void addGeofence(final double lat, final double Lng, String key) {
+        Geofence geofence = setGeofence(lat, Lng, key);
+//        GeofencingRequest geofencingRequest = setGeofencingRequest(geofence);
+
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        geofencingClient.addGeofences(
+                setGeofencingRequest(geofence),
+                createPendingIntent()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    showToast("Geofence added succesfully on"+lat  +"Lat:"+Lng);
+                }else {
+                    showToast("Geofence could not be added"+task.getException().getMessage());
+                    Log.d("geofence",task.getException().toString());
+                }
+
+            }
+        });
+
+    }
+    private void showToast(String msg){
+        Toast.makeText(getContext(),msg,Toast.LENGTH_LONG).show();
     }
 }
