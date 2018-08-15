@@ -138,8 +138,7 @@ public class MainActivity extends AppCompatActivity
             FragmentTransaction transaction = manager.beginTransaction();
             transaction.replace(R.id.mainLayout, myEventsFragment, "myevents");
         } else if (id == R.id.nav_logout) {
-            Toast.makeText(getApplicationContext(),"Logout clicked",Toast.LENGTH_LONG).show();
-            mAuth.signOut();
+             mAuth.signOut();
 
         }
 

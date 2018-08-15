@@ -1,15 +1,20 @@
 package com.example.gen.e_board.MyIntentsServices;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.example.gen.e_board.EventDetails;
 import com.example.gen.e_board.R;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
@@ -31,53 +36,70 @@ public class GeofenceService extends IntentService {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
         if (geofencingEvent.hasError()) {
-            Log.d(TAG,getErrorString(geofencingEvent.getErrorCode()));
+            Log.d(TAG, getErrorString(geofencingEvent.getErrorCode()));
             return;
         }
 
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
-        if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL || geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER){
-            List<Geofence> triggeringFences  = geofencingEvent.getTriggeringGeofences();
-            String geofenceDetails = getGeofenceTrasitionDetails(geofenceTransition,triggeringFences);
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL || geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            List<Geofence> triggeringFences = geofencingEvent.getTriggeringGeofences();
+            String geofenceDetails = getGeofenceTrasitionDetails(geofenceTransition, triggeringFences);
 
-            notifyLocationAlert(getTransitionString(geofenceTransition),geofenceDetails);
+//            notifyLocationAlert(getTransitionString(geofenceTransition),geofenceDetails);
+            sendNotification(getTransitionString(geofenceTransition), geofenceDetails);
 
 
         }
 
     }
+
     // Create a detail message with Geofences received
     private String getGeofenceTrasitionDetails(int geoFenceTransition, List<Geofence> triggeringGeofences) {
         // get the ID of each geofence triggered
         ArrayList<String> triggeringGeofencesList = new ArrayList<>();
-        for ( Geofence geofence : triggeringGeofences ) {
-            triggeringGeofencesList.add( geofence.getRequestId() );
+        for (Geofence geofence : triggeringGeofences) {
+            triggeringGeofencesList.add(geofence.getRequestId());
         }
 
         String status = null;
-        if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER )
+        if (geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER)
             status = "Welcome at ";
-        else if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
+        else if (geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT)
             status = "Hope you had a nice time at ";
-        else if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL)
+        else if (geoFenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL)
             status = "Nice to Have You at ";
-        return status + TextUtils.join( ", ", triggeringGeofencesList);
+        return status + TextUtils.join(", ", triggeringGeofencesList);
     }
-    private void notifyLocationAlert(String locTransitionType, String locationDetails) {
 
-        String CHANNEL_ID = "Zoftino";
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.button_drawable)
-                        .setContentTitle(locTransitionType)
-                        .setContentText(locationDetails);
+    private void sendNotification(String title, String details) {
+        Intent intent = new Intent(this, EventDetails.class);
+//        create an  taskstackbuilder and add the intent which inflates the backstack
+        TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
+        taskStackBuilder.addNextIntent(intent);
+        taskStackBuilder.addParentStack(EventDetails.class);
+        taskStackBuilder.addNextIntentWithParentStack(intent);
+//        get  the pendingintent containing the backstack
+        PendingIntent notificationPendingIntent = taskStackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        builder.setAutoCancel(true);
-
-        NotificationManager mNotificationManager =
+        NotificationManager notificatioMng =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificatioMng.notify(
+                GEOFENCE_NOTIFICATION_ID,
+                createNotification(title, details, notificationPendingIntent));
+    }
 
-        mNotificationManager.notify(0, builder.build());
+    // Create a notification
+    private Notification createNotification(String title, String details, PendingIntent notificationPendingIntent) {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
+        notificationBuilder
+                .setSmallIcon(R.drawable.button_drawable)
+                .setColor(Color.RED)
+                .setContentTitle(title)
+                .setContentText(details)
+                .setContentIntent(notificationPendingIntent)
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
+                .setAutoCancel(true);
+        return notificationBuilder.build();
     }
 
 
@@ -93,6 +115,7 @@ public class GeofenceService extends IntentService {
                 return "geofence error";
         }
     }
+
     private String getTransitionString(int transitionType) {
         switch (transitionType) {
             case Geofence.GEOFENCE_TRANSITION_ENTER:

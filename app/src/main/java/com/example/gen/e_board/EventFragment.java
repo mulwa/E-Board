@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -34,6 +35,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -49,6 +52,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class EventFragment extends android.support.v4.app.Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    private static final float GEOFENCE_RADIUS = 500.f;
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
@@ -63,6 +67,8 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
     private PendingIntent geoFencePendingIntent;
     private final int GEOFENCE_REQ_CODE = 0;
     private GeofencingClient geofencingClient;
+    private Marker eventMarker;
+    private Circle eventFenceLimit;
 
 
     public EventFragment() {
@@ -86,8 +92,6 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
 
         buildGoogleClient();
 
-        addGeofence(-1.1008112,37.01206639999998,"Liberty");
-        addGeofence(-1.0969095,37.0153225,"Jkuat Library");
         return view;
     }
 
@@ -104,7 +108,7 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
                     LatLng ev = new LatLng(event.getLat(), event.getLng());
 
 //                    adding geofence to the events locations
-                    addGeofence(event.getLat(),event.getLng(),event.getEventName());
+                    addGeofence(event.getLat(), event.getLng(), event.getEventName());
 
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.position(ev)
@@ -122,9 +126,10 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
                     customInforAdapter inforAdapter = new customInforAdapter(getContext());
                     mMap.setInfoWindowAdapter(inforAdapter);
 
-                    Marker marker = mMap.addMarker(markerOptions);
-                    marker.setTag(event1);
-                    marker.showInfoWindow();
+
+                    eventMarker = mMap.addMarker(markerOptions);
+                    eventMarker.setTag(event1);
+                    eventMarker.showInfoWindow();
 
 
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(ev));
@@ -222,18 +227,18 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
             currentLong = location.getLongitude();
             LatLng positionLatLng = new LatLng(currentLat, currentLong);
 
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .position(positionLatLng)
-                    .title("Your current  location")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
-
-            if (currentLocationMarker != null)
-                currentLocationMarker.remove();
-            currentLocationMarker = mMap.addMarker(markerOptions);
+//            MarkerOptions markerOptions = new MarkerOptions()
+//                    .position(positionLatLng)
+//                    .title("Your current  location")
+//                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+//
+//            if (currentLocationMarker != null)
+//                currentLocationMarker.remove();
+//            currentLocationMarker = mMap.addMarker(markerOptions);
 
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(positionLatLng).zoom(19f).tilt(70).build();
+                    .target(positionLatLng).zoom(16f).tilt(70).build();
 
             if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -275,16 +280,16 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
     private Geofence setGeofence(double lat, double lng, String key) {
         return new Geofence.Builder()
                 .setRequestId(key)
-                .setCircularRegion(lat, lng, 500)
+                .setCircularRegion(lat, lng, GEOFENCE_RADIUS)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .setLoiteringDelay(10000)
                 .build();
     }
 
     private GeofencingRequest setGeofencingRequest(Geofence geofence) {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
         builder.addGeofence(geofence);
         return builder.build();
     }
@@ -315,18 +320,31 @@ public class EventFragment extends android.support.v4.app.Fragment implements On
                 createPendingIntent()).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
-                    showToast("Geofence added succesfully on"+lat  +"Lat:"+Lng);
-                }else {
-                    showToast("Geofence could not be added"+task.getException().getMessage());
-                    Log.d("geofence",task.getException().toString());
+                if (task.isSuccessful()) {
+                    drawFenceCircle(lat, Lng);
+                } else {
+                    showToast("Geofence could not be added" + task.getException().getMessage());
+                    Log.d("geofence", task.getException().toString());
                 }
 
             }
         });
 
     }
-    private void showToast(String msg){
-        Toast.makeText(getContext(),msg,Toast.LENGTH_LONG).show();
+
+    private void drawFenceCircle(double lati, double lng) {
+        if (eventFenceLimit != null)
+            eventFenceLimit.remove();
+        CircleOptions circleOptions = new CircleOptions()
+                .center(new LatLng(lati, lng))
+                .strokeColor(Color.argb(50, 70, 70, 70))
+                .fillColor(Color.argb(100, 150, 150, 150))
+                .radius(GEOFENCE_RADIUS);
+
+        eventFenceLimit = mMap.addCircle(circleOptions);
+    }
+
+    private void showToast(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
 }
